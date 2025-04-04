@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Octokit.GraphQL;
 using Octokit.GraphQL.Model;
 
@@ -16,7 +17,7 @@ public class Projects(ActionsMinUtils.github.GitHub github)
     }
 
     public async Task<IEnumerable<ParentIssue>> GetParentIssues(string org, int projectNumber, string fieldName,
-        int first = 50)
+        int first = 20)
     {
         string? cursor = null;
 
@@ -57,7 +58,12 @@ public class Projects(ActionsMinUtils.github.GitHub github)
                 {
                     var parentIssues = new List<ParentIssue>();
                     foreach (var option in field.Options)
-                        parentIssues.Add(new ParentIssue(option.Id, option.Description));
+                    {
+                        var issue = IsIssueUrl(option.Description);
+                        if (issue != null)
+                            parentIssues.Add(new ParentIssue { FieldId = option.Id, Issue = issue });
+                    }
+
                     return parentIssues;
                 }
 
@@ -69,5 +75,28 @@ public class Projects(ActionsMinUtils.github.GitHub github)
 
         // Fallback
         return [];
+    }
+
+    /// <summary>
+    ///     Parses a GitHub issue URL and extracts the repository owner, repository name, and issue number.
+    /// </summary>
+    /// <param name="url">The GitHub issue URL to parse.</param>
+    /// <returns>
+    ///     An <see cref="Issue" /> object if the URL is valid; otherwise, <c>null</c>.
+    /// </returns>
+    public static Issue? IsIssueUrl(string url)
+    {
+        var regex = new Regex(@"http(s)\://github.com/(?<owner>[^/]+)/(?<repo>[^/]+)/issues/(?<issueId>[0-9]+)");
+        url = url.ToLowerInvariant().Trim();
+        var match = regex.Match(url);
+        if (match.Success)
+            return new Issue
+            {
+                Url = url,
+                Owner = match.Groups["owner"].Value,
+                Repository = match.Groups["repo"].Value,
+                Number = int.Parse(match.Groups["issueId"].Value)
+            };
+        return null;
     }
 }

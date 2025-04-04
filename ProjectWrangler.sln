@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjectWrangler", "ProjectWrangler\ProjectWrangler.csproj", "{F6209002-0984-4A4B-8D16-263BF382C707}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjectWrangler.Tests", "ProjectWrangler.Tests\ProjectWrangler.Tests.csproj", "{46805275-5AC5-4C76-BE67-8E5D84836CDB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{F6209002-0984-4A4B-8D16-263BF382C707}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F6209002-0984-4A4B-8D16-263BF382C707}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F6209002-0984-4A4B-8D16-263BF382C707}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46805275-5AC5-4C76-BE67-8E5D84836CDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46805275-5AC5-4C76-BE67-8E5D84836CDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46805275-5AC5-4C76-BE67-8E5D84836CDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46805275-5AC5-4C76-BE67-8E5D84836CDB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

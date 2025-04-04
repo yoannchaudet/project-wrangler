@@ -18,6 +18,8 @@ var projects = new Projects(github);
 var parentIssues = await projects.GetParentIssues(
     baseContext.ProjectOrg,
     baseContext.ProjectNumber,
-    baseContext.ProjectFieldName,
-    20
+    baseContext.ProjectFieldName
 );
+
+foreach (var parentIssue in parentIssues)
+    Console.WriteLine("Parent issue: " + parentIssue.Issue.Number);

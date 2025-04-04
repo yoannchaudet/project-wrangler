@@ -5,15 +5,7 @@ namespace ProjectWrangler.GitHub;
 /// </summary>
 public class ParentIssue
 {
-    public ParentIssue(string fieldId, string issueUrl)
-    {
-        FieldId = fieldId;
-        IssueUrl = issueUrl;
-    }
-
     public string FieldId { get; set; }
 
-    public string IssueId { get; set; }
-
-    public string IssueUrl { get; set; }
+    public Issue Issue { get; set; }
 }
