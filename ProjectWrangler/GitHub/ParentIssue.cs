@@ -8,4 +8,6 @@ public class ParentIssue
     public string FieldId { get; set; }
 
     public Issue Issue { get; set; }
+    
+    public string? IssueId { get; set; }
 }

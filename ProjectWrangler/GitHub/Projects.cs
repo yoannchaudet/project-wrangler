@@ -1,21 +1,47 @@
 using System.Text.RegularExpressions;
+using ActionsMinUtils;
 using Octokit.GraphQL;
+using Octokit.GraphQL.Core.Deserializers;
 using Octokit.GraphQL.Model;
 
 namespace ProjectWrangler.GitHub;
 
 public class Projects(ActionsMinUtils.github.GitHub github)
 {
-    public async Task<string> GetIssueId(string repositoryOwner, string repositoryName, int issueNumber)
+    /// <summary>
+    /// Retrieves the unique identifier of a GitHub issue.
+    /// </summary>
+    /// <param name="issue">The issue for which to retrieve the ID.</param>
+    /// <returns>
+    /// A string representing the issue ID if successful; otherwise, <c>null</c>.
+    /// </returns>
+    public async Task<string?> GetIssueId(Issue issue)
     {
         var query = new Query()
-            .Repository(repositoryName, repositoryOwner)
-            .Issue(issueNumber)
-            .SingleOrDefault()
-            .Select(issue => issue.Id);
-        return "wip";
+            .Repository(issue.Repository, issue.Owner)
+            .Issue(issue.Number)
+            .Select(i => i.Id);
+        try
+        {
+            var result = await github.GraphQLClient.Run(query);
+            return result.Value;
+        } catch (ResponseDeserializerException ex)
+        {
+            Logger.Warning("Unable to get issue id for {issue.Owner}/{issue.Repository}#{issue.Number}: {ex.Message}");
+        }
+        return null;
     }
 
+    /// <summary>
+    /// Retrieves parent issues from a GitHub project field based on a specified field name.
+    /// </summary>
+    /// <param name="org">The organization name.</param>
+    /// <param name="projectNumber">The project number.</param>
+    /// <param name="fieldName">The name of the field to search for.</param>
+    /// <param name="first">The number of fields to fetch per request (default is 20).</param>
+    /// <returns>
+    /// A collection of <see cref="ParentIssue"/> objects representing the parent issues.
+    /// </returns>
     public async Task<IEnumerable<ParentIssue>> GetParentIssues(string org, int projectNumber, string fieldName,
         int first = 20)
     {
@@ -78,11 +104,11 @@ public class Projects(ActionsMinUtils.github.GitHub github)
     }
 
     /// <summary>
-    ///     Parses a GitHub issue URL and extracts the repository owner, repository name, and issue number.
+    /// Parses a GitHub issue URL and extracts the repository owner, repository name, and issue number.
     /// </summary>
     /// <param name="url">The GitHub issue URL to parse.</param>
     /// <returns>
-    ///     An <see cref="Issue" /> object if the URL is valid; otherwise, <c>null</c>.
+    /// An <see cref="Issue"/> object if the URL is valid; otherwise, <c>null</c>.
     /// </returns>
     public static Issue? IsIssueUrl(string url)
     {
@@ -100,3 +126,4 @@ public class Projects(ActionsMinUtils.github.GitHub github)
         return null;
     }
 }
+
