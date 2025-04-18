@@ -51,7 +51,7 @@ public class Projects(
     /// <returns>
     /// A collection of <see cref="ParentIssue"/> objects representing the parent issues.
     /// </returns>
-    public async Task<(string?,List<ParentIssue>)> GetParentIssues(string org,
+    public async Task<(string?,string?,List<ParentIssue>)> GetParentIssues(string org,
         int projectNumber,
         string fieldName,
         int first = 20)
@@ -74,6 +74,7 @@ public class Projects(
                             new
                             {
                                 // field name + options
+                                field.Id,
                                 field.Name,
                                 Options =
                                     field.Options(null)
@@ -109,11 +110,12 @@ public class Projects(
                         if (issue != null)
                             parentIssues.Add(new ParentIssue
                             {
-                                FieldId = option.Id,
+                                FieldId = field.Id.Value,
+                                FieldOptionId = option.Id,
                                 Issue = issue
                             });
                     }
-                    return (field.Name,parentIssues);
+                    return (field.Id.Value, field.Name,parentIssues);
                 }
 
             // Pass down cursor for pagination
@@ -125,7 +127,7 @@ public class Projects(
 
         // Fallback
         return
-        (null,[
+        (null,null,[
         ]);
     }
 
@@ -162,11 +164,11 @@ public class Projects(
             foreach (var node in response.Data.Organization.ProjectV2.Items.Nodes)
             {
                 // Ignore anything but issues and issues without a matching field
-                if (node.Type != "ISSUE" || node.FieldValueByName == null)
+                if (node.Type != "ISSUE" || node.FieldValueByName == null )
                     continue;
 
-                yield return new ProjectIssue(node.Content.Id, node.Content.Parent?.Id,
-                   node.FieldValueByName?.Id, node.FieldValueByName?.OptionId);
+                yield return new ProjectIssue(node.Content.Id, node.Content.Title,node.Content.Parent?.Id,
+                    node.FieldValueByName!.OptionId);
             }
             
             // Get next cursor

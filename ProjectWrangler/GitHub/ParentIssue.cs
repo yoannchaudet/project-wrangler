@@ -6,6 +6,7 @@ namespace ProjectWrangler.GitHub;
 public class ParentIssue
 {
     public string FieldId { get; set; }
+    public string FieldOptionId { get; set; }
 
     public Issue Issue { get; set; }
     

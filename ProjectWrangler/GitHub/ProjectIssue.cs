@@ -1,3 +1,3 @@
 namespace ProjectWrangler.GitHub;
 
-public record ProjectIssue(string Id, string? ParentId, string? FieldId, string? FieldOptionId);
+public record ProjectIssue(string Id, string Title, string? ParentId, string FieldOptionId);

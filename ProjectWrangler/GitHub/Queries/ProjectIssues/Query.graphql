@@ -9,6 +9,7 @@ query {
                     content {
                         ... on Issue {
                             id,
+                            title,
                             parent {
                                 id
                             }

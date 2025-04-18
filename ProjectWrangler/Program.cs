@@ -25,26 +25,28 @@ try
     // Get parent issues for the project field by looking at description on options when they look like an issue URL
     Logger.Info(
         $"Looking for parent issues for field {baseContext.ProjectFieldName} in project {baseContext.ProjectOrg}/{baseContext.ProjectNumber}...");
-    var (fieldName, parentIssues) = await projects.GetParentIssues(
+    var (fieldId, fieldName, parentIssues) = await projects.GetParentIssues(
         baseContext.ProjectOrg,
         baseContext.ProjectNumber,
         baseContext.ProjectFieldName
     );
-    if (fieldName == null)
+
+    // Verify we found a matching field name
+    if (fieldId == null || fieldName == null)
     {
-        Logger.Warning("Unable to find field name for project field {baseContext.ProjectFieldName}");
+        Logger.Warning($"Unable to find a field name matching '{baseContext.ProjectFieldName}' (case insensitive)");
         return;
     }
 
+    // Print the case corrected field name (if necessary)
     if (!fieldName.Equals(baseContext.ProjectFieldName))
-    {
-        Logger.Info($"Retrieved case-corrected field name: {fieldName}");
-    }
+        Logger.Info($"Field name case-corrected to '{fieldName}'");
 
+    // How many parent issues did we find
     Logger.Info($"Found {parentIssues.Count} parent issue(s)");
 
     // Find all parent issue ids too
-    Logger.Info($"Querying global id for parent parent issue(s)...");
+    Logger.Info("Fetching ids for parent parent issue(s)...");
     {
         var tasks = new List<Task<string?>>();
         foreach (var parentIssue in parentIssues)
@@ -54,12 +56,37 @@ try
             parentIssues[i].IssueId = tasks[i].Result;
     }
 
-    Logger.Info($"Iterating over project issues...");
+    // Build some mappings
+    var optionToParentIssue = parentIssues.ToDictionary(
+        parentIssue => parentIssue.FieldOptionId,
+        parentIssue => parentIssue
+    );
+    
+    // Iterate over all project issues (with the field we track, defined)
+    Logger.Info("Iterating over project issues...");
     await foreach (var projectIssue in projects.GetProjectIssues(baseContext.ProjectOrg, baseContext.ProjectNumber,
                        fieldName!))
     {
-        Console.WriteLine(
-            $"Processing issue {projectIssue.Id} field=({projectIssue.FieldOptionId}), parent=({projectIssue.ParentId})");
+        // Ignore issues not matching a field option we track
+        if (!optionToParentIssue.TryGetValue(projectIssue.FieldOptionId, out var parentIssue))
+            continue;
+
+        // Issue is already properly parented
+        if (projectIssue.ParentId != null && projectIssue.ParentId == parentIssue.IssueId)
+            continue;
+
+        // Leave issue that would parent-themselves alone
+        if (projectIssue.Id == parentIssue.IssueId)
+        {
+            Console.WriteLine(
+                $"IGNORE SELF {projectIssue.Id}: {projectIssue.Title} field=({projectIssue.FieldOptionId}), parent=({projectIssue.ParentId})");
+            continue;
+        }
+
+        
+            Console.WriteLine(
+                $"Need to reparent issue {projectIssue.Id}: {projectIssue.Title} field=({projectIssue.FieldOptionId}), parent=({projectIssue.ParentId})");            
+        
     }
 }
 finally

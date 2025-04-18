@@ -45,6 +45,7 @@ public record Node(
 
 public record Content(
     [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("title")] string Title,
     [property: JsonPropertyName("parent")] Parent? Parent
 );
 
