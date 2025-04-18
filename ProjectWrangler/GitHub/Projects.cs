@@ -9,6 +9,7 @@ using Octokit.GraphQL.Model;
 using ProjectWrangler.GitHub.Queries;
 using Scriban;
 using ProjectIssuesResponse = ProjectWrangler.GitHub.Queries.ProjectIssues.Response;
+using AddSubIssueResponse = ProjectWrangler.GitHub.Queries.AddSubIssue.Response;
 
 namespace ProjectWrangler.GitHub;
 
@@ -127,9 +128,7 @@ public class Projects(
         } while (cursor != null);
 
         // Fallback
-        return
-            (null, null, [
-            ]);
+        return (null, null, []);
     }
 
     public async IAsyncEnumerable<ProjectIssue> GetProjectIssues(string org, int projectNumber, string fieldName)
@@ -177,6 +176,33 @@ public class Projects(
             else
                 cursor = null;
         } while (cursor != null);
+    }
+
+    public async Task AddSubIssue(string issueId, string subIssueId)
+    {
+        // Prep mutation
+        var mutationTemplate = Template.Parse(QueryUtils.GetAddSubIssueMutation());
+        var uri = new Uri("graphql", UriKind.Relative);
+        var clientMutationId = Guid.NewGuid().ToString();
+        var mutation = await mutationTemplate.RenderAsync(new
+        {
+            issueId,
+            subIssueId,
+            clientMutationId
+        });
+
+        // Execute the mutation
+        var apiResponse = await github.RestClient.Connection.Post<string>(uri, new { Query = mutation },
+            MediaTypeNames.Application.Json, MediaTypeNames.Application.Json);
+        if (apiResponse.HttpResponse.StatusCode != HttpStatusCode.OK)
+            throw new Exception($"Unable to add sub issue: {apiResponse.HttpResponse.StatusCode}");
+        var responseBody = apiResponse.HttpResponse.Body.ToString()!;
+        var response =
+            JsonSerializer.Deserialize<AddSubIssueResponse>(responseBody)!;
+
+        // Just check if we get back our client mutation id (ignore other stuff)
+        if (response.Data.AddSubIssue?.ClientMutationId != clientMutationId)
+            throw new Exception($"Mutation failed: {responseBody}");
     }
 
     /// <summary>

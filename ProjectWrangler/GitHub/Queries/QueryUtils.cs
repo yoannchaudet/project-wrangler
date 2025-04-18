@@ -14,6 +14,11 @@ public static class QueryUtils
         return GetEmbeddedResourceContent("ProjectIssues.Query.graphql");
     }
 
+    public static string GetAddSubIssueMutation()
+    {
+        return GetEmbeddedResourceContent("AddSubIssue.Mutation.graphql");
+    }
+
     /// <summary>
     ///     Gets the content of an embedded resource from the Queries namespace.
     /// </summary>

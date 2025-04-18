@@ -1,0 +1,13 @@
+mutation {
+    addSubIssue(input: {
+        issueId:  "{{issue_id}}"
+        subIssueId: "{{sub_issue_id}}"
+        replaceParent: true
+        clientMutationId: "{{client_mutation_id}}"
+    }) {
+    subIssue {
+        id
+    }
+    clientMutationId
+    }
+}

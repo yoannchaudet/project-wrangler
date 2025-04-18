@@ -22,6 +22,13 @@ try
     // - query all issues on the project board, extract parent issue (if any) and field value we track (if any)
     // - for each issue, if the field value is not empty, check if the parent issue is the expected one, if not, update it
 
+    if (true)
+    {
+        await projects.AddSubIssue("I_kwDOLzx6Fs6ws36v", "I_kwDOLzx6Fs6ybHJf");
+
+        Environment.Exit(1);
+    }
+
     // Get parent issues for the project field by looking at description on options when they look like an issue URL
     Logger.Info(
         $"Looking for parent issues for field {baseContext.ProjectFieldName} in project {baseContext.ProjectOrg}/{baseContext.ProjectNumber}...");
