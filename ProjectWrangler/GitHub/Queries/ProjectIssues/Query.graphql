@@ -1,0 +1,27 @@
+query {
+    organization(login:"{{org}}") {
+        projectV2(number: {{project_number}}) {
+            items(first: {{first}}, after:"{{cursor}}") {
+                pageInfo { hasNextPage, endCursor }
+                nodes {
+                    id,
+                    type,
+                    content {
+                        ... on Issue {
+                            id,
+                            parent {
+                                id
+                            }
+                        }
+                    }
+                    fieldValueByName(name:"{{field_name}}") {
+                        ... on ProjectV2ItemFieldSingleSelectValue {
+                            id
+                            optionId
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

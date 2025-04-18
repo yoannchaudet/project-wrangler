@@ -11,4 +11,12 @@
         <PackageReference Include="ActionsMinUtils" Version="0.0.0-alpha.27"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="GitHub\Queries\ProjectIssues.graphql" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="GitHub\Queries\ProjectIssues\Query.graphql" />
+    </ItemGroup>
+
 </Project>

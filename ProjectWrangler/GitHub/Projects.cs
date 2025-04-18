@@ -1,8 +1,13 @@
+using System.Net.Mime;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using ActionsMinUtils;
 using Octokit.GraphQL;
 using Octokit.GraphQL.Core.Deserializers;
 using Octokit.GraphQL.Model;
+using ProjectWrangler.GitHub.Queries;
+using Scriban;
+using ProjectIssuesResponse = ProjectWrangler.GitHub.Queries.ProjectIssues.Response;
 
 namespace ProjectWrangler.GitHub;
 
@@ -46,7 +51,7 @@ public class Projects(
     /// <returns>
     /// A collection of <see cref="ParentIssue"/> objects representing the parent issues.
     /// </returns>
-    public async Task<IEnumerable<ParentIssue>> GetParentIssues(string org,
+    public async Task<(string?,List<ParentIssue>)> GetParentIssues(string org,
         int projectNumber,
         string fieldName,
         int first = 20)
@@ -108,8 +113,7 @@ public class Projects(
                                 Issue = issue
                             });
                     }
-
-                    return parentIssues;
+                    return (field.Name,parentIssues);
                 }
 
             // Pass down cursor for pagination
@@ -117,59 +121,61 @@ public class Projects(
                 ? results.PageInfo.EndCursor
                 : null;
 
-            Console.WriteLine("Cursor: " + cursor);
         } while (cursor != null);
 
         // Fallback
         return
-        [
-        ];
+        (null,[
+        ]);
     }
 
-    // public async Task GetIssues(string org,
-    //     int projectNumber)
-    // {
-    //     // var query = new Query()
-    //     //     .Organization(org)
-    //     //     .ProjectV2(number: projectNumber)
-    //     //     .Items(first: 100)
-    //     //     .Nodes.Select(item => new
-    //     //         {
-    //     //             item.Id,
-    //     //             item.Type,
-    //     //             Issue = item.Content.Switch<string>(s => s.Issue(x => x.Title)),
-    //     //             Initiative = item.FieldValueByName("Initiative")
-    //     //                 .Single().Switch<string>(
-    //     //                     s=> s.ProjectV2ItemFieldSingleSelectValue(x => x.Name))
-    //     //         }
-    //     //     );
-    //
-    //
-    //     var query = new Query()
-    //         .Organization("github")
-    //         .ProjectV2(13332)
-    //         .Items(first:100).Nodes.Select(item => new {
-    //             item.Id,
-    //             item.Type,
-    //             Content = item.Content.Switch<Issue>(
-    //                 whenIssue => new {
-    //                     whenIssue.Id,
-    //                     whenIssue.Number,
-    //                     whenIssue.Title
-    //                 }
-    //             ),
-    //             Initiative = item.FieldValueByName("Initiative").Switch<string>(
-    //                 (ProjectV2ItemFieldSingleSelectValue singleSelect) => singleSelect.Name,
-    //             )
-    //         }).ToList();
-    //     
-    //     Console.WriteLine(query.ToString());
-    //     
-    //     var results = await github.GraphQLClient.Run(query);
-    //     var x = results;
-    //
-    //     Console.WriteLine("xxx");
-    // }
+    public async IAsyncEnumerable<ProjectIssue> GetProjectIssues(string org, int projectNumber, string fieldName)
+    {
+        // Prep query
+        var queryTemplate = Template.Parse(QueryUtils.GetProjectIssuesQuery());
+        var uri = new Uri("graphql", UriKind.Relative);
+
+        string? cursor = null;
+        do
+        {
+            // Render the query
+            var query = await queryTemplate.RenderAsync(new
+            {
+                org,
+                projectNumber,
+                first = 100,
+                fieldName,
+                cursor
+            });
+
+            // Execute the query
+            var apiResponse = await github.RestClient.Connection.Post<string>(uri, new { Query = query },
+                MediaTypeNames.Application.Json, MediaTypeNames.Application.Json);
+            if (apiResponse.HttpResponse.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                throw new Exception($"Unable to get project issues: {apiResponse.HttpResponse.StatusCode}");
+            }
+            var response = JsonSerializer.Deserialize<ProjectIssuesResponse>(apiResponse.HttpResponse.Body.ToString()!)!;
+            if ( response.Data.Organization == null) 
+                throw new Exception($"Organization not found: {org}");
+
+            foreach (var node in response.Data.Organization.ProjectV2.Items.Nodes)
+            {
+                // Ignore anything but issues and issues without a matching field
+                if (node.Type != "ISSUE" || node.FieldValueByName == null)
+                    continue;
+
+                yield return new ProjectIssue(node.Content.Id, node.Content.Parent?.Id,
+                   node.FieldValueByName?.Id, node.FieldValueByName?.OptionId);
+            }
+            
+            // Get next cursor
+            if ( response.Data.Organization.ProjectV2.Items.PageInfo.HasNextPage)
+                cursor = response.Data.Organization.ProjectV2.Items.PageInfo.EndCursor;
+            else
+                cursor = null;
+        } while (cursor != null);
+    }
 
     /// <summary>
     /// Parses a GitHub issue URL and extracts the repository owner, repository name, and issue number.
