@@ -12,11 +12,11 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="GitHub\Queries\ProjectIssues.graphql" />
+        <None Remove="GitHub\Queries\ProjectIssues.graphql"/>
     </ItemGroup>
 
     <ItemGroup>
-      <EmbeddedResource Include="GitHub\Queries\ProjectIssues\Query.graphql" />
+        <EmbeddedResource Include="GitHub\Queries\ProjectIssues\Query.graphql"/>
     </ItemGroup>
 
 </Project>

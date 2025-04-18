@@ -1,40 +1,34 @@
-using System.Reflection;
+namespace ProjectWrangler.GitHub.Queries;
 
-namespace ProjectWrangler.GitHub.Queries
+/// <summary>
+///     Utility class for working with GraphQL queries stored as embedded resources.
+/// </summary>
+public static class QueryUtils
 {
     /// <summary>
-    /// Utility class for working with GraphQL queries stored as embedded resources.
+    ///     Gets the content of the ProjectIssues GraphQL query.
     /// </summary>
-    public static class QueryUtils
+    /// <returns>The GraphQL query as a string.</returns>
+    public static string GetProjectIssuesQuery()
     {
-        /// <summary>
-        /// Gets the content of the ProjectIssues GraphQL query.
-        /// </summary>
-        /// <returns>The GraphQL query as a string.</returns>
-        public static string GetProjectIssuesQuery()
-        {
-            return GetEmbeddedResourceContent("ProjectIssues.Query.graphql");
-        }
+        return GetEmbeddedResourceContent("ProjectIssues.Query.graphql");
+    }
 
-        /// <summary>
-        /// Gets the content of an embedded resource from the Queries namespace.
-        /// </summary>
-        /// <param name="resourceName">The name of the resource file.</param>
-        /// <returns>The content of the embedded resource as a string.</returns>
-        /// <exception cref="InvalidOperationException">Thrown when the resource cannot be found.</exception>
-        private static string GetEmbeddedResourceContent(string resourceName)
-        {
-            var type = typeof(QueryUtils);
-            var fullResourceName = $"{type.Namespace}.{resourceName}";
+    /// <summary>
+    ///     Gets the content of an embedded resource from the Queries namespace.
+    /// </summary>
+    /// <param name="resourceName">The name of the resource file.</param>
+    /// <returns>The content of the embedded resource as a string.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the resource cannot be found.</exception>
+    private static string GetEmbeddedResourceContent(string resourceName)
+    {
+        var type = typeof(QueryUtils);
+        var fullResourceName = $"{type.Namespace}.{resourceName}";
 
-            using Stream stream = type.Assembly.GetManifestResourceStream(fullResourceName)!;
-            if (stream == null)
-            {
-                throw new InvalidOperationException($"Resource '{fullResourceName}' not found.");
-            }
+        using var stream = type.Assembly.GetManifestResourceStream(fullResourceName)!;
+        if (stream == null) throw new InvalidOperationException($"Resource '{fullResourceName}' not found.");
 
-            using StreamReader reader = new StreamReader(stream);
-            return reader.ReadToEnd();
-        }
+        using var reader = new StreamReader(stream);
+        return reader.ReadToEnd();
     }
 }

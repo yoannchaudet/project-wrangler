@@ -1,7 +1,6 @@
-namespace ProjectWrangler.GitHub.Queries.ProjectIssues;
-
-using System.Collections.Generic;
 using System.Text.Json.Serialization;
+
+namespace ProjectWrangler.GitHub.Queries.ProjectIssues;
 
 public record Response(
     [property: JsonPropertyName("data")] Data Data

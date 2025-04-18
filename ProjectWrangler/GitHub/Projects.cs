@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Mime;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -15,11 +16,11 @@ public class Projects(
     ActionsMinUtils.github.GitHub github)
 {
     /// <summary>
-    /// Retrieves the unique identifier of a GitHub issue.
+    ///     Retrieves the unique identifier of a GitHub issue.
     /// </summary>
     /// <param name="issue">The issue for which to retrieve the ID.</param>
     /// <returns>
-    /// A string representing the issue ID if successful; otherwise, <c>null</c>.
+    ///     A string representing the issue ID if successful; otherwise, <c>null</c>.
     /// </returns>
     public async Task<string?> GetIssueId(Issue issue)
     {
@@ -42,16 +43,16 @@ public class Projects(
     }
 
     /// <summary>
-    /// Retrieves parent issues from a GitHub project field based on a specified field name.
+    ///     Retrieves parent issues from a GitHub project field based on a specified field name.
     /// </summary>
     /// <param name="org">The organization name.</param>
     /// <param name="projectNumber">The project number.</param>
     /// <param name="fieldName">The name of the field to search for.</param>
     /// <param name="first">The number of fields to fetch per request (default is 20).</param>
     /// <returns>
-    /// A collection of <see cref="ParentIssue"/> objects representing the parent issues.
+    ///     A collection of <see cref="ParentIssue" /> objects representing the parent issues.
     /// </returns>
-    public async Task<(string?,string?,List<ParentIssue>)> GetParentIssues(string org,
+    public async Task<(string?, string?, List<ParentIssue>)> GetParentIssues(string org,
         int projectNumber,
         string fieldName,
         int first = 20)
@@ -115,20 +116,20 @@ public class Projects(
                                 Issue = issue
                             });
                     }
-                    return (field.Id.Value, field.Name,parentIssues);
+
+                    return (field.Id.Value, field.Name, parentIssues);
                 }
 
             // Pass down cursor for pagination
             cursor = results.PageInfo.HasNextPage
                 ? results.PageInfo.EndCursor
                 : null;
-
         } while (cursor != null);
 
         // Fallback
         return
-        (null,null,[
-        ]);
+            (null, null, [
+            ]);
     }
 
     public async IAsyncEnumerable<ProjectIssue> GetProjectIssues(string org, int projectNumber, string fieldName)
@@ -153,26 +154,25 @@ public class Projects(
             // Execute the query
             var apiResponse = await github.RestClient.Connection.Post<string>(uri, new { Query = query },
                 MediaTypeNames.Application.Json, MediaTypeNames.Application.Json);
-            if (apiResponse.HttpResponse.StatusCode != System.Net.HttpStatusCode.OK)
-            {
+            if (apiResponse.HttpResponse.StatusCode != HttpStatusCode.OK)
                 throw new Exception($"Unable to get project issues: {apiResponse.HttpResponse.StatusCode}");
-            }
-            var response = JsonSerializer.Deserialize<ProjectIssuesResponse>(apiResponse.HttpResponse.Body.ToString()!)!;
-            if ( response.Data.Organization == null) 
+            var response =
+                JsonSerializer.Deserialize<ProjectIssuesResponse>(apiResponse.HttpResponse.Body.ToString()!)!;
+            if (response.Data.Organization == null)
                 throw new Exception($"Organization not found: {org}");
 
             foreach (var node in response.Data.Organization.ProjectV2.Items.Nodes)
             {
                 // Ignore anything but issues and issues without a matching field
-                if (node.Type != "ISSUE" || node.FieldValueByName == null )
+                if (node.Type != "ISSUE" || node.FieldValueByName == null)
                     continue;
 
-                yield return new ProjectIssue(node.Content.Id, node.Content.Title,node.Content.Parent?.Id,
+                yield return new ProjectIssue(node.Content.Id, node.Content.Title, node.Content.Parent?.Id,
                     node.FieldValueByName!.OptionId);
             }
-            
+
             // Get next cursor
-            if ( response.Data.Organization.ProjectV2.Items.PageInfo.HasNextPage)
+            if (response.Data.Organization.ProjectV2.Items.PageInfo.HasNextPage)
                 cursor = response.Data.Organization.ProjectV2.Items.PageInfo.EndCursor;
             else
                 cursor = null;
@@ -180,11 +180,11 @@ public class Projects(
     }
 
     /// <summary>
-    /// Parses a GitHub issue URL and extracts the repository owner, repository name, and issue number.
+    ///     Parses a GitHub issue URL and extracts the repository owner, repository name, and issue number.
     /// </summary>
     /// <param name="url">The GitHub issue URL to parse.</param>
     /// <returns>
-    /// An <see cref="Issue"/> object if the URL is valid; otherwise, <c>null</c>.
+    ///     An <see cref="Issue" /> object if the URL is valid; otherwise, <c>null</c>.
     /// </returns>
     public static Issue? IsIssueUrl(string url)
     {

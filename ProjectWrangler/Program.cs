@@ -61,7 +61,7 @@ try
         parentIssue => parentIssue.FieldOptionId,
         parentIssue => parentIssue
     );
-    
+
     // Iterate over all project issues (with the field we track, defined)
     Logger.Info("Iterating over project issues...");
     await foreach (var projectIssue in projects.GetProjectIssues(baseContext.ProjectOrg, baseContext.ProjectNumber,
@@ -83,10 +83,9 @@ try
             continue;
         }
 
-        
-            Console.WriteLine(
-                $"Need to reparent issue {projectIssue.Id}: {projectIssue.Title} field=({projectIssue.FieldOptionId}), parent=({projectIssue.ParentId})");            
-        
+
+        Console.WriteLine(
+            $"Need to reparent issue {projectIssue.Id}: {projectIssue.Title} field=({projectIssue.FieldOptionId}), parent=({projectIssue.ParentId})");
     }
 }
 finally
