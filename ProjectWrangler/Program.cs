@@ -17,10 +17,16 @@ sw.Start();
 try
 {
     // Core logic
-    // - get all options for the field we track, extract parent issues from options wiht a matching description
+    // - get all options for the field we track, extract parent issues from options with a matching description
     // - lookup all issue ids based on url
-    // - find all issues on the project board, linked to a parent issue, and if needed, add them as sub issue
+    // - query all issues on the project board, extract parent issue (if any) and field value we track (if any)
+    // - for each issue, if the field value is not empty, check if the parent issue is the expected one, if not, update it
 
+     //await projects.GetIssues(baseContext.ProjectOrg, baseContext.ProjectNumber);
+    
+    if (true)
+        throw new Exception("stop");
+    
     // Get parent issues for the project field by looking at description on options when they look like an issue URL
     var parentIssues = (await projects.GetParentIssues(
         baseContext.ProjectOrg,

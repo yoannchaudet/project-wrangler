@@ -6,7 +6,8 @@ using Octokit.GraphQL.Model;
 
 namespace ProjectWrangler.GitHub;
 
-public class Projects(ActionsMinUtils.github.GitHub github)
+public class Projects(
+    ActionsMinUtils.github.GitHub github)
 {
     /// <summary>
     /// Retrieves the unique identifier of a GitHub issue.
@@ -18,17 +19,20 @@ public class Projects(ActionsMinUtils.github.GitHub github)
     public async Task<string?> GetIssueId(Issue issue)
     {
         var query = new Query()
-            .Repository(issue.Repository, issue.Owner)
+            .Repository(issue.Repository,
+                issue.Owner)
             .Issue(issue.Number)
             .Select(i => i.Id);
         try
         {
             var result = await github.GraphQLClient.Run(query);
             return result.Value;
-        } catch (ResponseDeserializerException ex)
+        }
+        catch (ResponseDeserializerException ex)
         {
             Logger.Warning("Unable to get issue id for {issue.Owner}/{issue.Repository}#{issue.Number}: {ex.Message}");
         }
+
         return null;
     }
 
@@ -42,7 +46,9 @@ public class Projects(ActionsMinUtils.github.GitHub github)
     /// <returns>
     /// A collection of <see cref="ParentIssue"/> objects representing the parent issues.
     /// </returns>
-    public async Task<IEnumerable<ParentIssue>> GetParentIssues(string org, int projectNumber, string fieldName,
+    public async Task<IEnumerable<ParentIssue>> GetParentIssues(string org,
+        int projectNumber,
+        string fieldName,
         int first = 20)
     {
         string? cursor = null;
@@ -52,7 +58,8 @@ public class Projects(ActionsMinUtils.github.GitHub github)
             var query = new Query()
                 .Organization(org)
                 .ProjectV2(projectNumber)
-                .Fields(first, cursor)
+                .Fields(first,
+                    cursor)
                 .Select(fields => new
                 {
                     // Get nodes
@@ -64,10 +71,17 @@ public class Projects(ActionsMinUtils.github.GitHub github)
                                 // field name + options
                                 field.Name,
                                 Options =
-                                    field.Options(null).Select(option =>
-                                        new { option.Id, option.Description }).ToList()
+                                    field.Options(null)
+                                        .Select(option =>
+                                            new
+                                            {
+                                                option.Id,
+                                                option.Description
+                                            })
+                                        .ToList()
                             }
-                        ).ToList(),
+                        )
+                        .ToList(),
 
                     // Get page info too (for pagination)
                     PageInfo = new
@@ -80,28 +94,82 @@ public class Projects(ActionsMinUtils.github.GitHub github)
             var results = await github.GraphQLClient.Run(query);
             foreach (var field in results.Nodes)
                 // If we found the field we are looking for (matching by name, case insensitive), return its options where descriptions are matching issues
-                if (field.Name.ToLowerInvariant().Equals(fieldName.ToLowerInvariant()))
+                if (field.Name.ToLowerInvariant()
+                    .Equals(fieldName.ToLowerInvariant()))
                 {
                     var parentIssues = new List<ParentIssue>();
                     foreach (var option in field.Options)
                     {
                         var issue = IsIssueUrl(option.Description);
                         if (issue != null)
-                            parentIssues.Add(new ParentIssue { FieldId = option.Id, Issue = issue });
+                            parentIssues.Add(new ParentIssue
+                            {
+                                FieldId = option.Id,
+                                Issue = issue
+                            });
                     }
 
                     return parentIssues;
                 }
 
             // Pass down cursor for pagination
-            cursor = results.PageInfo.HasNextPage ? results.PageInfo.EndCursor : null;
+            cursor = results.PageInfo.HasNextPage
+                ? results.PageInfo.EndCursor
+                : null;
 
             Console.WriteLine("Cursor: " + cursor);
         } while (cursor != null);
 
         // Fallback
-        return [];
+        return
+        [
+        ];
     }
+
+    // public async Task GetIssues(string org,
+    //     int projectNumber)
+    // {
+    //     // var query = new Query()
+    //     //     .Organization(org)
+    //     //     .ProjectV2(number: projectNumber)
+    //     //     .Items(first: 100)
+    //     //     .Nodes.Select(item => new
+    //     //         {
+    //     //             item.Id,
+    //     //             item.Type,
+    //     //             Issue = item.Content.Switch<string>(s => s.Issue(x => x.Title)),
+    //     //             Initiative = item.FieldValueByName("Initiative")
+    //     //                 .Single().Switch<string>(
+    //     //                     s=> s.ProjectV2ItemFieldSingleSelectValue(x => x.Name))
+    //     //         }
+    //     //     );
+    //
+    //
+    //     var query = new Query()
+    //         .Organization("github")
+    //         .ProjectV2(13332)
+    //         .Items(first:100).Nodes.Select(item => new {
+    //             item.Id,
+    //             item.Type,
+    //             Content = item.Content.Switch<Issue>(
+    //                 whenIssue => new {
+    //                     whenIssue.Id,
+    //                     whenIssue.Number,
+    //                     whenIssue.Title
+    //                 }
+    //             ),
+    //             Initiative = item.FieldValueByName("Initiative").Switch<string>(
+    //                 (ProjectV2ItemFieldSingleSelectValue singleSelect) => singleSelect.Name,
+    //             )
+    //         }).ToList();
+    //     
+    //     Console.WriteLine(query.ToString());
+    //     
+    //     var results = await github.GraphQLClient.Run(query);
+    //     var x = results;
+    //
+    //     Console.WriteLine("xxx");
+    // }
 
     /// <summary>
     /// Parses a GitHub issue URL and extracts the repository owner, repository name, and issue number.
@@ -113,7 +181,8 @@ public class Projects(ActionsMinUtils.github.GitHub github)
     public static Issue? IsIssueUrl(string url)
     {
         var regex = new Regex(@"http(s)\://github.com/(?<owner>[^/]+)/(?<repo>[^/]+)/issues/(?<issueId>[0-9]+)");
-        url = url.ToLowerInvariant().Trim();
+        url = url.ToLowerInvariant()
+            .Trim();
         var match = regex.Match(url);
         if (match.Success)
             return new Issue
@@ -126,4 +195,3 @@ public class Projects(ActionsMinUtils.github.GitHub github)
         return null;
     }
 }
-
