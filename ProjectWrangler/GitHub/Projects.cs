@@ -41,7 +41,7 @@ public class Projects(
         }
         catch (ResponseDeserializerException ex)
         {
-            Logger.Warning("Unable to get issue id for {issue.Owner}/{issue.Repository}#{issue.Number}: {ex.Message}");
+            Logger.Warning($"Unable to get issue id for {issue.Owner}/{issue.Repository}#{issue.Number}: {ex.Message}");
         }
 
         return null;
@@ -105,7 +105,7 @@ public class Projects(
 
             var results = await github.ExecuteAsync(async () => await github.GraphQLClient.Run(query));
             foreach (var field in results.Nodes)
-                // If we found the field we are looking for (matching by name, case insensitive), return its options where descriptions are matching issues
+                // If we found the field we are looking for (matching by name, case-insensitive), return its options where descriptions are matching issues
                 if (field.Name.ToLowerInvariant()
                     .Equals(fieldName.ToLowerInvariant()))
                 {
@@ -182,10 +182,7 @@ public class Projects(
             }
 
             // Get next cursor
-            if (response.Data.Organization.ProjectV2.Items.PageInfo.HasNextPage)
-                cursor = response.Data.Organization.ProjectV2.Items.PageInfo.EndCursor;
-            else
-                cursor = null;
+            cursor = response.Data.Organization.ProjectV2.Items.PageInfo.HasNextPage ? response.Data.Organization.ProjectV2.Items.PageInfo.EndCursor : null;
         } while (cursor != null);
     }
 
