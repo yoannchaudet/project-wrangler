@@ -7,22 +7,22 @@ using ProjectWrangler.GitHub;
 // Get context 
 var baseContext = ActionContext.TryCreate<BaseActionContext>()!;
 
-// Init various clients
+// Initialize clients
 var github = new GitHub(baseContext.ProjectGitHubToken);
 var projects = new Projects(github);
 
-// Start a clock
+// Start a clock to measure execution time
 var sw = new Stopwatch();
 sw.Start();
 try
 {
-    // Core logic
-    // - get all options for the field we track, extract parent issues from options with a matching description
-    // - lookup all issue ids based on url
-    // - query all issues on the project board, extract parent issue (if any) and field value we track (if any)
-    // - for each issue, if the field value is not empty, check if the parent issue is the expected one, if not, update it
+    // Core logic:
+    // 1. Get all options for the tracked field, extract parent issues from options with matching descriptions
+    // 2. Look up all issue IDs based on URLs
+    // 3. Query all issues on the project board, extract their parent issues (if any) and tracked field values (if any)
+    // 4. For each issue with a non-empty field value, update its parent if it doesn't match the expected one
 
-    // Get parent issues for the project field by looking at description on options when they look like an issue URL
+    // Get parent issues for the project field by looking at descriptions on options when they look like an issue URL
     Logger.Info(
         $"Looking for parent issues for field {baseContext.ProjectFieldName} in project {baseContext.ProjectOrg}/{baseContext.ProjectNumber}...");
     var (fieldId, fieldName, parentIssues) = await projects.GetParentIssues(
@@ -42,11 +42,11 @@ try
     if (!fieldName.Equals(baseContext.ProjectFieldName))
         Logger.Info($"Field name case-corrected to '{fieldName}'");
 
-    // How many parent issues did we find
+    // Log the number of parent issues found
     Logger.Info($"Found {parentIssues.Count} parent issue(s)");
 
-    // Find all parent issue ids too
-    Logger.Info("Fetching ids for parent parent issue(s)...");
+    // Fetch IDs for all parent issues
+    Logger.Info("Fetching ids for parent issue(s)...");
     {
         var tasks = new List<Task<(string?, string)?>>();
         foreach (var parentIssue in parentIssues)
@@ -59,17 +59,17 @@ try
         }
     }
 
-    // Build some mappings
+    // Build mapping from field option ID to parent issue
     var optionToParentIssue = parentIssues.ToDictionary(
         parentIssue => parentIssue.FieldOptionId,
         parentIssue => parentIssue
     );
 
-    // Build a clean reparenting structure (for console output)
+    // Track reparenting operations for console output
     var reparentingOperations = 0;
     var reparentingStructure = new Dictionary<ParentIssue, List<ProjectIssue>>();
 
-    // Iterate over all project issues (with the field we track, defined)
+    // Iterate over all project issues with the tracked field defined
     Logger.Info("Enumerating project issues to build reparenting structure...");
     await foreach (var projectIssue in projects.GetProjectIssues(baseContext.ProjectOrg, baseContext.ProjectNumber,
                        fieldName!))
@@ -78,14 +78,14 @@ try
         if (!optionToParentIssue.TryGetValue(projectIssue.FieldOptionId, out var parentIssue))
             continue;
 
-        // Issue is already properly parented
+        // Skip issues that are already properly parented
         if (projectIssue.ParentId != null && projectIssue.ParentId == parentIssue.IssueId)
             continue;
 
-        // Leave issue that would parent-themselves alone
+        // Skip issues that would parent themselves
         if (projectIssue.Id == parentIssue.IssueId) continue;
 
-        // Build the reparenting structure
+        // Add to the reparenting structure
         if (!reparentingStructure.ContainsKey(parentIssue))
             reparentingStructure.Add(parentIssue, new List<ProjectIssue>());
         reparentingStructure[parentIssue].Add(projectIssue);
@@ -100,7 +100,7 @@ try
             Logger.Info($"    📦 {projectIssue.Title} ({projectIssue.Id})");
     }
 
-    // Reparent issues
+    // Execute reparenting operations
     if (reparentingStructure.Count > 0)
     {
         Logger.Info($"Executing {reparentingOperations} reparenting operation(s)...");
@@ -111,7 +111,7 @@ try
 
         await Task.WhenAll(tasks);
 
-        // Summary
+        // Log summary of results
         var successCount = tasks.Count(t => t.Result);
         var failureCount = tasks.Count - successCount;
         Logger.Info($"Reparenting complete: {successCount} successful, {failureCount} failed");
@@ -130,6 +130,9 @@ finally
 /// <summary>
 /// Safely adds a sub-issue and continues execution even if the operation fails
 /// </summary>
+/// <param name="projects">The Projects instance to use for the operation</param>
+/// <param name="parentIssue">The parent issue to add the sub-issue to</param>
+/// <param name="projectIssue">The issue to be added as a sub-issue</param>
 /// <returns>True if operation succeeded, false otherwise</returns>
 static async Task<bool> SafeAddSubIssue(Projects projects, ParentIssue parentIssue, ProjectIssue projectIssue)
 {

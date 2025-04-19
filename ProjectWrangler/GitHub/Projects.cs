@@ -17,11 +17,11 @@ public class Projects(
     ActionsMinUtils.github.GitHub github)
 {
     /// <summary>
-    ///     Retrieves the unique identifier of a GitHub issue.
+    ///     Retrieves the unique identifier and title of a GitHub issue.
     /// </summary>
-    /// <param name="issue">The issue for which to retrieve the ID.</param>
+    /// <param name="issue">The issue for which to retrieve the ID and title.</param>
     /// <returns>
-    ///     A string representing the issue ID if successful; otherwise, <c>null</c>.
+    ///     A tuple containing the issue ID and title if successful; otherwise, <c>null</c>.
     /// </returns>
     public async Task<(string?, string)?> GetIssueId(Issue issue)
     {
@@ -55,7 +55,7 @@ public class Projects(
     /// <param name="fieldName">The name of the field to search for.</param>
     /// <param name="first">The number of fields to fetch per request (default is 20).</param>
     /// <returns>
-    ///     A collection of <see cref="ParentIssue" /> objects representing the parent issues.
+    ///     A tuple containing the field ID, field name, and a list of <see cref="ParentIssue" /> objects.
     /// </returns>
     public async Task<(string?, string?, List<ParentIssue>)> GetParentIssues(string org,
         int projectNumber,
@@ -135,6 +135,13 @@ public class Projects(
         return (null, null, []);
     }
 
+    /// <summary>
+    ///     Asynchronously retrieves project issues with the specified field name.
+    /// </summary>
+    /// <param name="org">The organization name.</param>
+    /// <param name="projectNumber">The project number.</param>
+    /// <param name="fieldName">The name of the field to filter issues by.</param>
+    /// <returns>An async enumerable of ProjectIssue objects.</returns>
     public async IAsyncEnumerable<ProjectIssue> GetProjectIssues(string org, int projectNumber, string fieldName)
     {
         // Prep query
@@ -182,6 +189,13 @@ public class Projects(
         } while (cursor != null);
     }
 
+    /// <summary>
+    ///     Adds an issue as a sub-issue of another issue.
+    /// </summary>
+    /// <param name="issueId">The ID of the parent issue.</param>
+    /// <param name="subIssueId">The ID of the issue to add as a sub-issue.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    /// <exception cref="Exception">Thrown when the mutation fails.</exception>
     public async Task AddSubIssue(string issueId, string subIssueId)
     {
         // Prep mutation

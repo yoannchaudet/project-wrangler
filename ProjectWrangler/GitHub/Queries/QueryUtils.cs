@@ -14,6 +14,10 @@ public static class QueryUtils
         return GetEmbeddedResourceContent("ProjectIssues.Query.graphql");
     }
 
+    /// <summary>
+    ///     Gets the content of the AddSubIssue GraphQL mutation.
+    /// </summary>
+    /// <returns>The GraphQL mutation as a string.</returns>
     public static string GetAddSubIssueMutation()
     {
         return GetEmbeddedResourceContent("AddSubIssue.Mutation.graphql");
