@@ -23,7 +23,7 @@ public class Projects(
     /// <returns>
     ///     A string representing the issue ID if successful; otherwise, <c>null</c>.
     /// </returns>
-    public async Task<(string?,string)?> GetIssueId(Issue issue)
+    public async Task<(string?, string)?> GetIssueId(Issue issue)
     {
         var query = new Query()
             .Repository(issue.Repository,

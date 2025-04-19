@@ -1,10 +1,8 @@
 ﻿using System.Diagnostics;
 using ActionsMinUtils;
 using ActionsMinUtils.github;
-using Octokit.GraphQL.Model;
 using ProjectWrangler;
 using ProjectWrangler.GitHub;
-using ProjectWrangler.GitHub.Queries.ProjectIssues;
 
 // Get context 
 var baseContext = ActionContext.TryCreate<BaseActionContext>()!;
@@ -85,10 +83,7 @@ try
             continue;
 
         // Leave issue that would parent-themselves alone
-        if (projectIssue.Id == parentIssue.IssueId)
-        {
-            continue;
-        }
+        if (projectIssue.Id == parentIssue.IssueId) continue;
 
         // Build the reparenting structure
         if (!reparentingStructure.ContainsKey(parentIssue))
@@ -102,9 +97,7 @@ try
     {
         Logger.Info($"🗂️ {parentIssue.IssueTitle} ({parentIssue.IssueId})");
         foreach (var projectIssue in reparentingStructure[parentIssue])
-        {
             Logger.Info($"    📦 {projectIssue.Title} ({projectIssue.Id})");
-        }
     }
 
     // Reparent issues
@@ -114,9 +107,7 @@ try
         var tasks = new List<Task<bool>>();
         foreach (var parentIssue in reparentingStructure.Keys)
         foreach (var projectIssue in reparentingStructure[parentIssue])
-        {
-           tasks.Add(SafeAddSubIssue(projects, parentIssue, projectIssue));
-        }
+            tasks.Add(SafeAddSubIssue(projects, parentIssue, projectIssue));
 
         await Task.WhenAll(tasks);
 
@@ -144,7 +135,7 @@ static async Task<bool> SafeAddSubIssue(Projects projects, ParentIssue parentIss
 {
     try
     {
-        await projects.AddSubIssue(parentIssue.IssueId!,projectIssue.Id);
+        await projects.AddSubIssue(parentIssue.IssueId!, projectIssue.Id);
         return true;
     }
     catch (Exception ex)

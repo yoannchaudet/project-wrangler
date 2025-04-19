@@ -11,6 +11,6 @@ public class ParentIssue
     public Issue Issue { get; set; }
 
     public string? IssueId { get; set; }
-    
-    public string ? IssueTitle { get; set; }
+
+    public string? IssueTitle { get; set; }
 }
