@@ -1,0 +1,40 @@
+name: project-wrangler
+description: "Try and make sense of project management with GitHub."
+author: "@github/edge-foundation"
+runs:
+  using: docker
+  image: ProjectWrangler/Dockerfile
+  args:
+    - ${{ inputs.project_github_token }}
+    - ${{ inputs.project_org }}
+    - ${{ inputs.project_number }}
+    - ${{ inputs.project_field_name }}
+    - ${{ inputs.dry_run }}
+
+inputs:
+
+  #
+  # Common inputs (for all commands)
+  #
+
+  project_github_token:
+    description: >
+      The GitHub token to use to perform Project v2 operations.
+    required: true
+  project_org:
+    description: >
+      The organization of the target project.
+    required: true
+  project_number:
+    description: >
+      The number of the target project.
+    required: true
+  project_field_name:
+    description: >
+      The PagerDuty API key with read access to the schedule.
+    required: true
+  dry_run:
+    description: >
+      Flag indicating whether to skip execution (true) or to execute the command (false).
+    required: false
+    default: "false"

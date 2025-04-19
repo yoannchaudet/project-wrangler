@@ -22,6 +22,12 @@ try
     // 3. Query all issues on the project board, extract their parent issues (if any) and tracked field values (if any)
     // 4. For each issue with a non-empty field value, update its parent if it doesn't match the expected one
 
+    if (baseContext.DryRun)
+    {
+        Logger.Info("Dry run mode, exiting");
+        System.Environment.Exit(0);
+    }
+    
     // Get parent issues for the project field by looking at descriptions on options when they look like an issue URL
     Logger.Info(
         $"Looking for parent issues for field {baseContext.ProjectFieldName} in project {baseContext.ProjectOrg}/{baseContext.ProjectNumber}...");

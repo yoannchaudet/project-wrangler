@@ -7,9 +7,7 @@ public class BaseActionContext : ActionContext
     // Inputs
     public string ProjectOrg => GetInput("project_org", true)!;
     public int ProjectNumber => int.Parse(GetInput("project_number", true)!);
-
     public string ProjectFieldName => GetInput("project_field_name", true)!;
-
     // A personal access token (fine grained) with the following scopes:
     //   - Owner = Organizaation in which the project lives
     //   - All repositories
@@ -18,4 +16,5 @@ public class BaseActionContext : ActionContext
     // Org permissions:
     //   - Project = readonly
     public string ProjectGitHubToken => GetInput("project_github_token", true)!;
+    public bool DryRun => GetInput("dry_run", false) == "true";
 }

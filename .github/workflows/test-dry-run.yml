@@ -1,0 +1,27 @@
+name: Test Dry Run
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  test-noop:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dry Run
+        uses: ./
+        with:
+          project_github_token: "some token"
+          project_org: "some_org"
+          project_number: 123456789
+          project_field_name: "some_field_name"
+          dry_run: "true"
