@@ -23,17 +23,21 @@ public class Projects(
     /// <returns>
     ///     A string representing the issue ID if successful; otherwise, <c>null</c>.
     /// </returns>
-    public async Task<string?> GetIssueId(Issue issue)
+    public async Task<(string?,string)?> GetIssueId(Issue issue)
     {
         var query = new Query()
             .Repository(issue.Repository,
                 issue.Owner)
             .Issue(issue.Number)
-            .Select(i => i.Id);
+            .Select(i => new
+            {
+                i.Id,
+                i.Title
+            });
         try
         {
             var result = await github.GraphQLClient.Run(query);
-            return result.Value;
+            return (result.Id.Value, result.Title);
         }
         catch (ResponseDeserializerException ex)
         {
@@ -201,7 +205,7 @@ public class Projects(
             JsonSerializer.Deserialize<AddSubIssueResponse>(responseBody)!;
 
         // Just check if we get back our client mutation id (ignore other stuff)
-        if (response.Data.AddSubIssue?.ClientMutationId != clientMutationId)
+        if (response.Data?.AddSubIssue?.ClientMutationId != clientMutationId)
             throw new Exception($"Mutation failed: {responseBody}");
     }
 

@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace ProjectWrangler.GitHub.Queries.AddSubIssue;
 
 public record Response(
-    [property: JsonPropertyName("data")] Data Data
+    [property: JsonPropertyName("data")] Data? Data
 );
 
 public record Data(
