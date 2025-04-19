@@ -36,7 +36,7 @@ public class Projects(
             });
         try
         {
-            var result = await github.GraphQLClient.Run(query);
+            var result = await github.ExecuteAsync(async () => await github.GraphQLClient.Run(query));
             return (result.Id.Value, result.Title);
         }
         catch (ResponseDeserializerException ex)
@@ -103,7 +103,7 @@ public class Projects(
                     }
                 });
 
-            var results = await github.GraphQLClient.Run(query);
+            var results = await github.ExecuteAsync(async () => await github.GraphQLClient.Run(query));
             foreach (var field in results.Nodes)
                 // If we found the field we are looking for (matching by name, case insensitive), return its options where descriptions are matching issues
                 if (field.Name.ToLowerInvariant()
@@ -162,8 +162,8 @@ public class Projects(
             });
 
             // Execute the query
-            var apiResponse = await github.RestClient.Connection.Post<string>(uri, new { Query = query },
-                MediaTypeNames.Application.Json, MediaTypeNames.Application.Json);
+            var apiResponse = await github.ExecuteAsync( async() =>   await github.RestClient.Connection.Post<string>(uri, new { Query = query },
+                MediaTypeNames.Application.Json, MediaTypeNames.Application.Json));
             if (apiResponse.HttpResponse.StatusCode != HttpStatusCode.OK)
                 throw new Exception($"Unable to get project issues: {apiResponse.HttpResponse.StatusCode}");
             var response =
@@ -210,8 +210,8 @@ public class Projects(
         });
 
         // Execute the mutation
-        var apiResponse = await github.RestClient.Connection.Post<string>(uri, new { Query = mutation },
-            MediaTypeNames.Application.Json, MediaTypeNames.Application.Json);
+        var apiResponse = await github.ExecuteAsync(async () =>  await github.RestClient.Connection.Post<string>(uri, new { Query = mutation },
+            MediaTypeNames.Application.Json, MediaTypeNames.Application.Json));
         if (apiResponse.HttpResponse.StatusCode != HttpStatusCode.OK)
             throw new Exception($"Unable to add sub issue: {apiResponse.HttpResponse.StatusCode}");
         var responseBody = apiResponse.HttpResponse.Body.ToString()!;
